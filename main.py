@@ -2,7 +2,8 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader
-import random # Potrzebne do tasowania plików
+import random
+from visualizer import visualize_skeleton_human
 
 import config as cfg
 import data_loader as dl
@@ -74,8 +75,8 @@ def main():
     split_ratio = 0.8
     split_idx = int(len(all_csv_paths) * split_ratio)
     
-    train_paths = all_csv_paths[:split_idx]
-    test_paths = all_csv_paths[split_idx:]
+    train_paths = all_csv_paths[:1]
+    test_paths = all_csv_paths[3:4]
     
     print(f"Total files: {len(all_csv_paths)}")
     print(f"Train files: {len(train_paths)}")
@@ -115,6 +116,9 @@ def main():
         edge_index=edge_index,
         num_nodes=len(cfg.JOINT_NAMES)
     ).to(device)
+
+    edge_index_vis = edge_index.detach().cpu()
+    visualize_skeleton_human(edge_index_vis, cfg.JOINT_NAMES)
     
     optimizer = optim.Adam(model.parameters(), lr=0.005)
     criterion = nn.CrossEntropyLoss()
