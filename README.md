@@ -1,0 +1,1 @@
+# widzenie_komp
