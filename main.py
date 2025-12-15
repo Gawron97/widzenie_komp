@@ -75,8 +75,8 @@ def main():
     split_ratio = 0.8
     split_idx = int(len(all_csv_paths) * split_ratio)
     
-    train_paths = all_csv_paths[:1]
-    test_paths = all_csv_paths[3:4]
+    train_paths = all_csv_paths[:split_idx]
+    test_paths = all_csv_paths[split_idx:]
     
     print(f"Total files: {len(all_csv_paths)}")
     print(f"Train files: {len(train_paths)}")
