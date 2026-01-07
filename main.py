@@ -41,7 +41,7 @@ class DataAugmentation:
         """Random temporal shift (circular)."""
         shift = random.randint(-self.time_shift_max, self.time_shift_max)
         if shift != 0:
-            x = torch.roll(x, shifts=shift, dims=0)  # Shift along time dimension
+            x = torch.roll(x, shifts=shift, dims=0)
         return x
     
     def __call__(self, x):
@@ -87,7 +87,6 @@ class EarlyStopping:
         self.early_stop = False
     
     def __call__(self, val_loss, val_acc, model):
-        # We track best accuracy (higher is better)
         if self.best_acc is None or val_acc > self.best_acc + self.min_delta:
             self.best_acc = val_acc
             self.best_loss = val_loss
@@ -119,7 +118,6 @@ def train_epoch(model, loader, optimizer, criterion):
         loss = criterion(logits, labels)
         loss.backward()
         
-        # Gradient clipping to prevent exploding gradients
         torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
         
         optimizer.step()
@@ -217,18 +215,15 @@ def main():
     print(f"Data Augmentation: {'OFF' if args.no_augment else 'ON'}")
     print(f"=" * 60)
     
-    # 1. Load data paths
     try:
         all_csv_paths = cfg.get_csv_paths()
     except Exception as e:
         print(e)
         return
 
-    # 2. Create global label map
     global_label_map = dl.create_global_label_map(all_csv_paths, cfg.LABELS_DIR)
     num_classes = len(global_label_map)
 
-    # 3. Train/Test split
     random.seed(42)
     random.shuffle(all_csv_paths)
     
@@ -242,7 +237,6 @@ def main():
     print(f"Train files: {len(train_paths)}")
     print(f"Test files:  {len(test_paths)}")
 
-    # 4. Load datasets
     print("Processing TRAIN data...")
     train_dataset = dl.load_mediapipe_with_labels(
         train_paths, cfg.LABELS_DIR, cfg.JOINT_NAMES, 
@@ -271,7 +265,7 @@ def main():
 
     # 6. DataLoaders
     use_pin_memory = (device.type == 'cuda')
-    num_workers = 0  # Set to 0 for Windows compatibility
+    num_workers = 0
     
     train_loader = DataLoader(
         train_dataset_aug, 
@@ -310,18 +304,17 @@ def main():
     # Learning rate scheduler - reduce on plateau
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(
         optimizer, 
-        mode='max',  # Maximize accuracy
-        factor=0.5,  # Reduce LR by half
-        patience=10,  # Wait 10 epochs before reducing
+        mode='max',
+        factor=0.5,
+        patience=10,
         min_lr=1e-6,
         verbose=True
     )
     
-    criterion = nn.CrossEntropyLoss(label_smoothing=0.0)  # Disabled label smoothing
+    criterion = nn.CrossEntropyLoss(label_smoothing=0.0)
 
     # 8. Load or Train
     if args.load:
-        # Load pre-trained model
         loaded_epoch, loaded_acc = load_model(model, path=args.model_path)
         if loaded_epoch is None:
             print("Cannot load model. Run without --load to train a new model.")
@@ -373,7 +366,7 @@ def main():
                 print(f"Best Test Accuracy: {early_stopping.best_acc*100:.1f}%")
                 print(f"{'='*60}\n")
                 early_stopping.restore_best_weights(model)
-                epochs = epoch + 1  # For plotting
+                epochs = epoch + 1
                 break
             
             if (epoch + 1) % 5 == 0:
@@ -389,7 +382,6 @@ def main():
         # Final evaluation
         final_test_loss, final_test_acc = evaluate(model, test_loader, criterion)
         
-        # Plot training curves
         fig, axes = plt.subplots(2, 2, figsize=(14, 10))
         
         # Loss plot

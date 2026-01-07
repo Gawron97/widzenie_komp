@@ -10,7 +10,6 @@ def csv_name_to_label_name(csv_basename):
     Convert CSV filename to label filename.
     e.g. '001_Subject_d26arrd1.csv' -> '001_d26arrd1.csv'
     """
-    # Split by '_Subject_' if present
     if '_Subject_' in csv_basename:
         parts = csv_basename.split('_Subject_')
         return parts[0] + '_' + parts[1]
@@ -22,9 +21,7 @@ def center_pose_to_hips(frame_array, hip_indices):
     Przesuwa współrzędne tak, aby środek bioder był w punkcie (0,0).
     frame_array: [Joints, 2]
     """
-    # Obliczamy średnią pozycję bioder (X, Y)
     hip_center = frame_array[hip_indices, :].mean(axis=0)
-    # Odejmujemy środek od wszystkich stawów
     return frame_array - hip_center
 
 def create_global_label_map(csv_paths, labels_dir):
@@ -38,11 +35,9 @@ def create_global_label_map(csv_paths, labels_dir):
         
         if os.path.exists(label_path):
             df_labels = pd.read_csv(label_path, header=None)
-            # Kolumna 2 to ID klasy
             unique_in_file = df_labels.iloc[:, 2].unique()
             all_raw_labels.update(unique_in_file)
 
-    # Sortujemy i tworzymy mapę {Raw_ID -> 0..N}
     unique_sorted = sorted(list(all_raw_labels))
     label_map = {val: idx for idx, val in enumerate(unique_sorted)}
     
@@ -51,7 +46,7 @@ def create_global_label_map(csv_paths, labels_dir):
 
 def load_mediapipe_with_labels(csv_paths, labels_dir, joint_names, seq_len, step, hip_indices, label_mapping):
     video_frames = []
-    videos_labels_mapped = [] # Tu od razu trzymamy zmapowane labele
+    videos_labels_mapped = []
 
     for coord_path in csv_paths:
         base_name = os.path.basename(coord_path)
@@ -83,11 +78,8 @@ def load_mediapipe_with_labels(csv_paths, labels_dir, joint_names, seq_len, step
             frame_array = center_pose_to_hips(frame_array, hip_indices)
             frames_x.append(frame_array)
             
-            # Pobieranie i mapowanie etykiety
             label_raw = frame_to_label.get(int(frame_num), -1)
-            
-            # Jeśli labela nie ma w mapie (np. -1 lub błąd), dajemy 0 lub pomijamy
-            # Tutaj zakładamy, że 0 to klasa "tło" lub pierwsza znaleziona
+
             mapped_label = label_mapping.get(label_raw, 0)
             
             frames_y_mapped.append(mapped_label)
@@ -95,7 +87,6 @@ def load_mediapipe_with_labels(csv_paths, labels_dir, joint_names, seq_len, step
         video_frames.append(np.stack(frames_x, axis=0))
         videos_labels_mapped.append(np.array(frames_y_mapped, dtype=np.int64))
 
-    # Tworzenie sekwencji
     seq_list = []
     seq_labels = []
 
@@ -106,7 +97,6 @@ def load_mediapipe_with_labels(csv_paths, labels_dir, joint_names, seq_len, step
             end = start + seq_len
             seq_x = X_vid[start:end]
             
-            # Label sekwencji to najczęstsza klasa w oknie
             counts = np.bincount(y_mapped_vid[start:end])
             seq_label = int(counts.argmax())
 
@@ -114,7 +104,6 @@ def load_mediapipe_with_labels(csv_paths, labels_dir, joint_names, seq_len, step
             seq_labels.append(seq_label)
 
     if not seq_list:
-        # Zwracamy pusty dataset, jeśli pliki były za krótkie
         print("Warning: No sequences created from these files (files too short?)")
         return None
 
@@ -131,6 +120,6 @@ def build_edge_index(joint_names, connections):
         if src in mapping and tgt in mapping:
             s, t = mapping[src], mapping[tgt]
             src_idx.extend([s, t])
-            tgt_idx.extend([t, s]) # Graf dwukierunkowy
+            tgt_idx.extend([t, s])
     
     return torch.tensor([src_idx, tgt_idx], dtype=torch.long)
