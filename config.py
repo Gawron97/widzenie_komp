@@ -1,14 +1,14 @@
 import glob
 
 # Ścieżki
-CSV_GLOB_PATTERN = "mediapipe_csv/*.csv"
-LABELS_DIR = "label/label"
+CSV_GLOB_PATTERN = "data/data/mp_pose_csv/*.csv"
+LABELS_DIR = "data/data/label"
 
 # Parametry danych
 SEQ_LEN = 32
 STEP = 8
 NUM_FEATURES = 2  # (x, y)
-BATCH_SIZE = 32
+BATCH_SIZE = 64  # Increased for better GPU utilization
 
 # Definicja szkieletu (podzbiór MediaPipe)
 JOINT_NAMES = [

@@ -5,6 +5,18 @@ import torch
 from torch_geometric.data import Data
 from torch.utils.data import TensorDataset
 
+def csv_name_to_label_name(csv_basename):
+    """
+    Convert CSV filename to label filename.
+    e.g. '001_Subject_d26arrd1.csv' -> '001_d26arrd1.csv'
+    """
+    # Split by '_Subject_' if present
+    if '_Subject_' in csv_basename:
+        parts = csv_basename.split('_Subject_')
+        return parts[0] + '_' + parts[1]
+    return csv_basename
+
+
 def center_pose_to_hips(frame_array, hip_indices):
     """
     Przesuwa współrzędne tak, aby środek bioder był w punkcie (0,0).
@@ -21,7 +33,8 @@ def create_global_label_map(csv_paths, labels_dir):
     print("Building global label map...")
     for coord_path in csv_paths:
         base_name = os.path.basename(coord_path)
-        label_path = os.path.join(labels_dir, base_name)
+        label_base_name = csv_name_to_label_name(base_name)
+        label_path = os.path.join(labels_dir, label_base_name)
         
         if os.path.exists(label_path):
             df_labels = pd.read_csv(label_path, header=None)
@@ -42,7 +55,8 @@ def load_mediapipe_with_labels(csv_paths, labels_dir, joint_names, seq_len, step
 
     for coord_path in csv_paths:
         base_name = os.path.basename(coord_path)
-        label_path = os.path.join(labels_dir, base_name)
+        label_base_name = csv_name_to_label_name(base_name)
+        label_path = os.path.join(labels_dir, label_base_name)
         if not os.path.exists(label_path): continue
         
         # Wczytywanie

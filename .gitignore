@@ -3,3 +3,5 @@ anon
 label
 mediapipe_csv
 skeleton
+data
+__pycache__
