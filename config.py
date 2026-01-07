@@ -1,14 +1,12 @@
 import glob
 
 # Ścieżki
-CSV_GLOB_PATTERN = "mediapipe_csv/*.csv"
-LABELS_DIR = "label/label"
-
-# Parametry danych
+CSV_GLOB_PATTERN = "data/data/mp_pose_csv/*.csv"
+LABELS_DIR = "data/data/label"
 SEQ_LEN = 32
 STEP = 8
-NUM_FEATURES = 2  # (x, y)
-BATCH_SIZE = 32
+NUM_FEATURES = 2 
+BATCH_SIZE = 64
 
 # Definicja szkieletu (podzbiór MediaPipe)
 JOINT_NAMES = [
@@ -27,9 +25,8 @@ JOINT_NAMES = [
     "RIGHT_ANKLE",     # 12
 ]
 
-HIP_INDICES = [7, 8]  # Indeksy stawów bioder
+HIP_INDICES = [7, 8]
 
-# Pary połączeń (krawędzie grafu)
 SKELETON_PAIRS = [
     ("NOSE", "LEFT_SHOULDER"), ("NOSE", "RIGHT_SHOULDER"),
     ("LEFT_SHOULDER", "RIGHT_SHOULDER"), ("LEFT_HIP", "RIGHT_HIP"),
